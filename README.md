@@ -34,3 +34,6 @@ All this feature does is access that relation and update as needed.
 
 <img width="786" height="447" alt="image" src="https://github.com/user-attachments/assets/e8192af2-af6c-42c5-927e-c62924d4a9d4" />
 
+# Legal
+
+This code is provided 'as is' with no additional support or guarantee.  Use at own risk.  MIT License.
