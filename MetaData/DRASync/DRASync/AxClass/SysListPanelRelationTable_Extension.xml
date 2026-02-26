@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxClass xmlns:i="http://www.w3.org/2001/XMLSchema-instance">
+	<Name>SysListPanelRelationTable_Extension</Name>
+	<SourceCode>
+		<Declaration><![CDATA[
+[ExtensionOf(classStr(SysListPanelRelationTable))]
+internal final class SysListPanelRelationTable_Extension
+{
+    private int i;
+    private SysCorpNetPrinters                      printers;
+    private FilePath                                printerPath;
+    private DocumentRoutingClientApp                xClientApp;
+    private DocumentRoutingPrinterAppAssociation    xAppAssociation;
+
+    private container                               printerContainer;
+    private RecId                                   printerRecId;
+    
+}
+
+]]></Declaration>
+		<Methods>
+			<Method>
+				<Name>initData</Name>
+				<Source><![CDATA[
+    private void initData(container data)
+    {
+        printerContainer = conPeek(data, i);
+        printerRecId     = conPeek(printerContainer, 1);
+
+        select printerPath from printers where printers.RecId == printerRecId;
+        printerPath = printers.PrinterPath;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>removeData</Name>
+				<Source><![CDATA[
+    void removeData(container data)
+    {
+        next removeData(data);
+        
+        ttsbegin;
+        for (i=conlen(data); i; i--)
+        {
+            this.initData(data);
+            while select crosscompany printers where printers.PrinterPath == printerPath
+            {
+                select forupdate xAppAssociation where printers.RecId == xAppAssociation.Printer && xAppAssociation.ClientApp == this.parmRelationRangeRecId();
+                xAppAssociation.delete();
+            }
+        }
+        ttscommit;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>addData</Name>
+				<Source><![CDATA[
+    void addData(container data)
+    {
+        next addData(data);
+        
+        for (i=conlen(data); i; i--)
+        {
+            this.initData(data);
+            while select crosscompany printers where printers.PrinterPath == printerPath && printers.DataAreaId != curExt()
+            {
+                xAppAssociation.Printer = Printers.recId;
+                xAppAssociation.ClientApp = this.parmRelationRangeRecId();
+                xAppAssociation.insert();                
+            }
+        }       
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+	</SourceCode>
+</AxClass>

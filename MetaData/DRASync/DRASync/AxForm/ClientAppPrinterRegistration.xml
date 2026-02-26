@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AxForm xmlns:i="http://www.w3.org/2001/XMLSchema-instance" xmlns="Microsoft.Dynamics.AX.Metadata.V6">
+	<Name>ClientAppPrinterRegistration</Name>
+	<SourceCode>
+		<Methods xmlns="">
+			<Method>
+				<Name>classDeclaration</Name>
+				<Source><![CDATA[
+[Form]
+public class ClientAppPrinterRegistration extends FormRun
+{
+    SysListPanelRelationTableCallback sysListPanel;
+
+}
+]]></Source>
+			</Method>
+			<Method>
+				<Name>availablePrinters</Name>
+				<Source><![CDATA[
+    container availablePrinters()
+    {
+        container             availablePrinters, data;
+        SysCorpNetPrinters    printers;
+        DocumentRoutingPrinterAppAssociation xAppAssociation;
+
+        while select printers   
+            notexists join xAppAssociation
+            where xAppAssociation.Printer == printers.RecId
+                && xAppAssociation.clientApp == DocumentRoutingClientApp.RecId
+        {
+            data = [printers.recId, printers.PrinterName, printers.PrinterPath];
+            AvailablePrinters += [data];
+        }
+
+        return AvailablePrinters;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>registeredPrinters</Name>
+				<Source><![CDATA[
+    container registeredPrinters()
+    {
+        container              selectedPrinters, data;
+        SysCorpNetPrinters     printers;
+        DocumentRoutingPrinterAppAssociation xAppAssociation;
+
+        while select printers
+            exists join xAppAssociation
+            where xAppAssociation.Printer == printers.RecId
+                && xAppAssociation.ClientApp == DocumentRoutingClientApp.RecId
+        {
+            data = [printers.recId, printers.PrinterName, printers.PrinterPath];
+            selectedPrinters += [data];
+        }
+
+        return SelectedPrinters;
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>init</Name>
+				<Source><![CDATA[
+    public void init()
+    {
+        container columns;
+        #ResAppl
+        columns = [0,0];
+        sysListPanel = SysListPanelRelationTableCallback::newForm(
+            element,
+            element.controlId(
+            formControlStr(ClientAppPrinterRegistration, Printers)),
+            "Registered Printers",
+            "Available Printers",
+            #IMagePrinter,
+        tableNum(DocumentRoutingPrinterAppAssociation),
+            fieldNum(DocumentRoutingPrinterAppAssociation, Printer),
+            fieldNum(DocumentRoutingPrinterAppAssociation, ClientApp),
+            tableNum(SysCorpNetPrinters),
+            fieldNum(SysCorpNetPrinters, RecId),
+            columns,
+            0,
+            '',
+            '',
+            identifierStr(registeredPrinters),
+            identifierStr(availablePrinters));
+        super();
+        sysListPanel.init();
+
+    }
+
+]]></Source>
+			</Method>
+			<Method>
+				<Name>refillListPanel</Name>
+				<Source><![CDATA[
+    public void refillListPanel(DocumentRoutingClientApp _clientApp)
+    {
+        sysListPanel.parmRelationRangeValue(int642Str(_clientApp.recId));
+        sysListPanel.parmRelationRangeRecId(_clientApp.recid);
+        sysListPanel.fill();    
+    }
+
+]]></Source>
+			</Method>
+		</Methods>
+		<DataSources xmlns="">
+			<DataSource>
+				<Name>DocumentRoutingClientApp</Name>
+				<Methods>
+					<Method>
+						<Name>active</Name>
+						<Source><![CDATA[
+        public int active()
+        {
+            int ret;
+    
+            ret = super();
+
+            element.refillListPanel(DocumentRoutingClientApp);    
+    
+            return ret;
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+				<Fields />
+			</DataSource>
+		</DataSources>
+		<DataControls xmlns="">
+			<Control>
+				<Name>Printers</Name>
+				<Type>TabPage</Type>
+				<Methods>
+					<Method>
+						<Name>pageActivated</Name>
+						<Source><![CDATA[
+        public void pageActivated()
+        {
+            element.refillListPanel(DocumentRoutingClientApp);
+            super();
+        }
+
+]]></Source>
+					</Method>
+				</Methods>
+			</Control>
+		</DataControls>
+		<Members xmlns="" />
+	</SourceCode>
+	<DataSources>
+		<AxFormDataSource xmlns="">
+			<Name>DocumentRoutingClientApp</Name>
+			<Table>DocumentRoutingClientApp</Table>
+			<Fields>
+				<AxFormDataSourceField>
+					<DataField>AppDescription</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>AppId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>Partition</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>RecId</DataField>
+				</AxFormDataSourceField>
+				<AxFormDataSourceField>
+					<DataField>TableId</DataField>
+				</AxFormDataSourceField>
+			</Fields>
+			<ReferencedDataSources />
+			<InsertIfEmpty>No</InsertIfEmpty>
+			<DataSourceLinks />
+			<DerivedDataSources />
+		</AxFormDataSource>
+	</DataSources>
+	<Design>
+		<Caption xmlns="">DRA printer registration</Caption>
+		<Pattern xmlns="">SimpleListDetails</Pattern>
+		<PatternVersion xmlns="">1.3</PatternVersion>
+		<Style xmlns="">SimpleListDetails</Style>
+		<Controls xmlns="">
+			<AxFormControl xmlns=""
+				i:type="AxFormActionPaneControl">
+				<Name>FormActionPaneControl</Name>
+				<Type>ActionPane</Type>
+				<Visible>No</Visible>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls />
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>FormGroupControl1</Name>
+				<HeightMode>SizeToAvailable</HeightMode>
+				<Type>Group</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl>
+						<Name>QuickFilterControl</Name>
+						<WidthMode>SizeToAvailable</WidthMode>
+						<FormControlExtension>
+							<Name>QuickFilterControl</Name>
+							<ExtensionComponents />
+							<ExtensionProperties>
+								<AxFormControlExtensionProperty>
+									<Name>targetControlName</Name>
+									<Type>String</Type>
+									<Value>FormGridControl</Value>
+								</AxFormControlExtensionProperty>
+								<AxFormControlExtensionProperty>
+									<Name>placeholderText</Name>
+									<Type>String</Type>
+								</AxFormControlExtensionProperty>
+								<AxFormControlExtensionProperty>
+									<Name>defaultColumnName</Name>
+									<Type>String</Type>
+									<Value>DocumentRoutingClientApp_AppDescription</Value>
+								</AxFormControlExtensionProperty>
+							</ExtensionProperties>
+						</FormControlExtension>
+					</AxFormControl>
+					<AxFormControl xmlns=""
+						i:type="AxFormGridControl">
+						<Name>FormGridControl</Name>
+						<AllowEdit>No</AllowEdit>
+						<Type>Grid</Type>
+						<WidthMode>SizeToContent</WidthMode>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls>
+							<AxFormControl xmlns=""
+								i:type="AxFormStringControl">
+								<Name>DocumentRoutingClientApp_AppId</Name>
+								<Type>String</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<DataField>AppId</DataField>
+								<DataSource>DocumentRoutingClientApp</DataSource>
+							</AxFormControl>
+							<AxFormControl xmlns=""
+								i:type="AxFormStringControl">
+								<Name>DocumentRoutingClientApp_AppDescription</Name>
+								<Type>String</Type>
+								<FormControlExtension
+									i:nil="true" />
+								<DataField>AppDescription</DataField>
+								<DataSource>DocumentRoutingClientApp</DataSource>
+							</AxFormControl>
+						</Controls>
+						<DataSource>DocumentRoutingClientApp</DataSource>
+						<MultiSelect>No</MultiSelect>
+						<ShowRowLabels>No</ShowRowLabels>
+						<Style>List</Style>
+					</AxFormControl>
+				</Controls>
+				<FrameType>None</FrameType>
+				<Style>SidePanel</Style>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormGroupControl">
+				<Name>FormGroupControl</Name>
+				<Pattern>FieldsFieldGroups</Pattern>
+				<PatternVersion>1.1</PatternVersion>
+				<Type>Group</Type>
+				<WidthMode>SizeToAvailable</WidthMode>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls />
+				<ColumnsMode>Fill</ColumnsMode>
+				<FrameType>None</FrameType>
+			</AxFormControl>
+			<AxFormControl xmlns=""
+				i:type="AxFormTabControl">
+				<Name>FormTabControl</Name>
+				<Type>Tab</Type>
+				<FormControlExtension
+					i:nil="true" />
+				<Controls>
+					<AxFormControl xmlns=""
+						i:type="AxFormTabPageControl">
+						<Name>Printers</Name>
+						<Pattern>FieldsFieldGroups</Pattern>
+						<PatternVersion>1.1</PatternVersion>
+						<Type>TabPage</Type>
+						<FormControlExtension
+							i:nil="true" />
+						<Controls />
+						<ColumnsMode>Fill</ColumnsMode>
+						<Caption>@BI:Printers</Caption>
+					</AxFormControl>
+				</Controls>
+				<Style>FastTabs</Style>
+			</AxFormControl>
+		</Controls>
+	</Design>
+	<Parts />
+</AxForm>
